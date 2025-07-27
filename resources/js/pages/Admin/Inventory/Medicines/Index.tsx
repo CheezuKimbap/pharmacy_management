@@ -1,103 +1,82 @@
 import Header from '@/components/Admin/Header';
-import { columns } from '@/components/DataTable/Columns';
+import { DataTableColumnHeader } from '@/components/DataTable/Columns';
 import { DataTable } from '@/components/DataTable/Data-Table';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Link } from '@inertiajs/react';
+import { ColumnDef } from '@tanstack/react-table';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { MdKeyboardDoubleArrowRight } from 'react-icons/md';
 
-type Medicine = {
+interface Product {
+    name: string;
+    brand: string;
+    category_id: number;
+    price: number;
+    cost: number;
+    stock: number;
+    reorder_level: number;
+    expiry_date: string;
+    description: string;
+    how_to_use: string;
+    side_effects: string;
+}
+
+export type Medicine = {
     medicineName: string;
     medicineId: string;
     groupName: string;
     stockInQty: number;
-    action?: string; // This can be replaced with JSX buttons later
 };
 
-export const medicines: Medicine[] = [
+const columns: ColumnDef<Medicine>[] = [
     {
-        medicineName: 'Paracetamol 500mg',
-        medicineId: 'MED-001',
-        groupName: 'Pain Relief',
-        stockInQty: 120,
-        action: 'Edit | Delete',
+        accessorKey: 'medicineName',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Medicine Name" />,
     },
     {
-        medicineName: 'Amoxicillin 250mg',
-        medicineId: 'MED-002',
-        groupName: 'Antibiotics',
-        stockInQty: 75,
-        action: 'Edit | Delete',
+        accessorKey: 'medicineId',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Medicine ID" />,
     },
     {
-        medicineName: 'Cetirizine 10mg',
-        medicineId: 'MED-003',
-        groupName: 'Antihistamines',
-        stockInQty: 200,
-        action: 'Edit | Delete',
+        accessorKey: 'groupName',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Group Name" />,
     },
     {
-        medicineName: 'Metformin 500mg',
-        medicineId: 'MED-004',
-        groupName: 'Diabetes Care',
-        stockInQty: 50,
-        action: 'Edit | Delete',
+        accessorKey: 'stockInQty',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Stock in Qty" />,
+        cell: ({ row }) => {
+            const qty = parseFloat(row.getValue('stockInQty'));
+            const formatted = new Intl.NumberFormat('en-US').format(qty);
+            return <div className="font-medium">{formatted}</div>;
+        },
     },
     {
-        medicineName: 'Ibuprofen 200mg',
-        medicineId: 'MED-005',
-        groupName: 'Pain Relief',
-        stockInQty: 180,
-        action: 'Edit | Delete',
-    },
-    {
-        medicineName: 'Loratadine 10mg',
-        medicineId: 'MED-006',
-        groupName: 'Antihistamines',
-        stockInQty: 90,
-        action: 'Edit | Delete',
-    },
-    {
-        medicineName: 'Azithromycin 500mg',
-        medicineId: 'MED-007',
-        groupName: 'Antibiotics',
-        stockInQty: 60,
-        action: 'Edit | Delete',
-    },
-    {
-        medicineName: 'Aspirin 81mg',
-        medicineId: 'MED-008',
-        groupName: 'Pain Relief',
-        stockInQty: 110,
-        action: 'Edit | Delete',
-    },
-    {
-        medicineName: 'Simvastatin 20mg',
-        medicineId: 'MED-009',
-        groupName: 'Cholesterol',
-        stockInQty: 70,
-        action: 'Edit | Delete',
-    },
-    {
-        medicineName: 'Omeprazole 20mg',
-        medicineId: 'MED-010',
-        groupName: 'Digestive Health',
-        stockInQty: 130,
-        action: 'Edit | Delete',
-    },
-    {
-        medicineName: 'Amlodipine 5mg',
-        medicineId: 'MED-011',
-        groupName: 'Blood Pressure',
-        stockInQty: 95,
-        action: 'Edit | Delete',
-    },
-    {
-        medicineName: 'Atorvastatin 10mg',
-        medicineId: 'MED-012',
-        groupName: 'Cholesterol',
-        stockInQty: 85,
-        action: 'Edit | Delete',
+        id: 'actions',
+        header: 'Actions',
+        cell: ({ row }) => {
+            const medicine = row.original;
+            return (
+                <Link className="flex items-center" href="#">
+                    View Full Detail
+                    <MdKeyboardDoubleArrowRight size="1.2em" />
+                </Link>
+            );
+        },
     },
 ];
 
 const Index = () => {
+    const [products, setProducts] = useState<Medicine[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        axios.get('/api/products').then((res) => {
+            setProducts(res.data);
+            setLoading(false);
+        });
+    }, []);
+
     return (
         <>
             <Header
@@ -106,8 +85,23 @@ const Index = () => {
                 actionLabel="Add New Item"
                 onActionClick={() => console.log('Clicked')}
             />
+
             <div className="flex flex-1 flex-col overflow-auto px-6">
-                <DataTable columns={columns} data={medicines} />
+                {loading ? (
+                    <div className="space-y-2">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                            <div key={i} className="flex items-center">
+                                <Skeleton className="h-4 w-[150px]" />
+                                <Skeleton className="h-4 w-[100px]" />
+                                <Skeleton className="h-4 w-[120px]" />
+                                <Skeleton className="h-4 w-[80px]" />
+                                <Skeleton className="h-4 w-[100px]" />
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <DataTable columns={columns} data={products} />
+                )}
             </div>
         </>
     );

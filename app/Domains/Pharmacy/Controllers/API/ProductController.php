@@ -5,7 +5,7 @@ namespace App\Domains\Pharmacy\Controllers\API;
 use App\Domains\Pharmacy\Services\ProductService;
 use Illuminate\Http\Request;
 use App\Core\Controllers\Controller;
-
+use App\Domains\Pharmacy\Mapper\MedicineMapper;
 class ProductController extends Controller
 {
     protected $productService;
@@ -17,8 +17,16 @@ class ProductController extends Controller
 
     public function index()
     {
-        $products = $this->productService->getAllProducts();
-        return response()->json($products);
+         $products = $this->productService->getAllProducts();
+
+        $medicines = collect($products)->map(function ($product) {
+            return MedicineMapper::toArray(MedicineMapper::fromProduct($product));
+        });
+
+   
+   
+
+        return response()->json($medicines);
     }
 
     public function show($id)

@@ -1,82 +1,50 @@
-import { Link } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown } from 'lucide-react';
-import { MdKeyboardDoubleArrowRight } from 'react-icons/md';
+import { cn } from '@/lib/utils';
+import { Column } from '@tanstack/react-table';
+import { ArrowDown, ArrowUp, ChevronsUpDown, EyeOff } from 'lucide-react';
 import { Button } from '../ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
-export type Medicine = {
-    medicineName: string;
-    medicineId: string;
-    groupName: string;
-    stockInQty: number;
-};
+// export type Medicine = {
+//     medicineName: string;
+//     medicineId: string;
+//     groupName: string;
+//     stockInQty: number;
+// };
 
-export const columns: ColumnDef<Medicine>[] = [
-    {
-        accessorKey: 'medicineName',
-        header: ({ column }) => {
-            return (
-                <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')} className="hover:cursor-pointer">
-                    Medicine Name
-                    <ArrowUpDown className="h-4 w-4" />
-                </Button>
-            );
-        },
-    },
-    {
-        accessorKey: 'medicineId',
-        header: ({ column }) => {
-            return (
-                <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')} className="hover:cursor-pointer">
-                    Medicine ID
-                    <ArrowUpDown className="h-4 w-4" />
-                </Button>
-            );
-        },
-    },
-    {
-        accessorKey: 'groupName',
-        header: ({ column }) => {
-            return (
-                <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')} className="hover:cursor-pointer">
-                    Group Name
-                    <ArrowUpDown className="h-4 w-4" />
-                </Button>
-            );
-        },
-    },
-    {
-        accessorKey: 'stockInQty',
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                className="outline-none hover:cursor-pointer"
-                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            >
-                Stock in Qty
-                <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-        ),
-        cell: ({ row }) => {
-            const qty = parseFloat(row.getValue('stockInQty'));
-            const formatted = new Intl.NumberFormat('en-US').format(qty);
-            return <div className="font-medium">{formatted}</div>;
-        },
-    },
-    {
-        id: 'actions',
-        header: 'Actions',
-        cell: ({ row }) => {
-            const medicine = row.original;
+interface DataTableColumnHeaderProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElement> {
+    column: Column<TData, TValue>;
+    title: string;
+}
 
-            return (
-                <Link className="flex items-center" href="">
-                    View Full Detail
-                    <span>
-                        <MdKeyboardDoubleArrowRight size="1.2em" />
-                    </span>
-                </Link>
-            );
-        },
-    },
-];
+export function DataTableColumnHeader<TData, TValue>({ column, title, className }: DataTableColumnHeaderProps<TData, TValue>) {
+    if (!column.getCanSort()) {
+        return <div className={cn(className)}>{title}</div>;
+    }
+    return (
+        <div className={cn('flex items-center gap-2', className)}>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="data-[state=open]:bg-accent -ml-3 h-8">
+                        <span>{title}</span>
+                        {column.getIsSorted() === 'desc' ? <ArrowDown /> : column.getIsSorted() === 'asc' ? <ArrowUp /> : <ChevronsUpDown />}
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={() => column.toggleSorting(false)}>
+                        <ArrowUp />
+                        Asc
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => column.toggleSorting(true)}>
+                        <ArrowDown />
+                        Desc
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => column.toggleVisibility(false)}>
+                        <EyeOff />
+                        Hide
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
+    );
+}
